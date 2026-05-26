@@ -68,14 +68,35 @@ class ModelOrchestrator:
         return {"status": "success", "simulated": True, "latency_ms": est_latency}
 
     async def _run_emotion_analyzer(self, name: str, est_latency: int, query: str, context: List[Any]) -> Dict[str, Any]:
-        """Phase 4: Will use DistilRoBERTa pipeline."""
-        await asyncio.sleep(est_latency / 1000.0)
-        return {"primary_emotion": "curiosity", "confidence": 0.85, "simulated": True}
+        """Phase 4: Uses DistilRoBERTa pipeline if installed, else simulates."""
+        try:
+            from transformers import pipeline
+            if not hasattr(self, "_emotion_pipe"):
+                logger.info("Loading DistilRoBERTa emotion model...")
+                self._emotion_pipe = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", top_k=1)
+            
+            result = self._emotion_pipe(query)[0][0]
+            return {"primary_emotion": result["label"], "confidence": round(result["score"], 3), "simulated": False}
+        except ImportError:
+            await asyncio.sleep(est_latency / 1000.0)
+            return {"primary_emotion": "curiosity", "confidence": 0.85, "simulated": True}
 
     async def _run_entity_extractor(self, name: str, est_latency: int, query: str, context: List[Any]) -> Dict[str, Any]:
-        """Phase 4: Will use GLiNER."""
-        await asyncio.sleep(est_latency / 1000.0)
-        return {"entities_found": len(query.split()) // 5, "simulated": True}
+        """Phase 4: Uses GLiNER if installed, else simulates."""
+        try:
+            from gliner import GLiNER
+            if not hasattr(self, "_gliner"):
+                logger.info("Loading GLiNER entity extraction model...")
+                self._gliner = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+            
+            labels = ["Goal", "Project", "Skill", "Person", "Emotion", "Technology", "Company"]
+            entities = self._gliner.predict_entities(query, labels)
+            extracted = [{"text": e["text"], "label": e["label"]} for e in entities]
+            
+            return {"entities_found": len(extracted), "entities": extracted, "simulated": False}
+        except ImportError:
+            await asyncio.sleep(est_latency / 1000.0)
+            return {"entities_found": len(query.split()) // 5, "simulated": True}
 
     async def _run_reasoning_model(self, name: str, est_latency: int, query: str, context: List[Any]) -> Dict[str, Any]:
         """Phase 4: Will call vLLM endpoint (e.g., Qwen3-14B)."""
