@@ -27,12 +27,16 @@ async def get_metrics():
 @router.get("/identity", response_model=IdentitySnapshot)
 async def get_identity(user_id: str = "default"):
     """
-    Current identity snapshot.
-    Phase 6: this will be computed by the Identity Engine
+    Current identity snapshot computed by the Identity Engine
     from longitudinal memory analysis.
     """
-    # Placeholder — returns defaults until Identity Engine is built
-    return IdentitySnapshot()
+    from main import get_services
+    services = get_services()
+    
+    graph_data = await services["graph"].get_user_graph(user_id)
+    snapshot = services["identity"].compute_snapshot(graph_data["nodes"], graph_data["edges"])
+    
+    return snapshot
 
 
 @router.get("/health")

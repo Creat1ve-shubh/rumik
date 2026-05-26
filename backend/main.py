@@ -78,6 +78,16 @@ async def lifespan(app: FastAPI):
 
     _services["explainability"] = ExplainabilityEngine()
 
+    # ── 7. Identity engine ──
+    from services.identity import IdentityEngine
+
+    _services["identity"] = IdentityEngine()
+
+    # ── 8. Model Orchestrator ──
+    from services.orchestrator import ModelOrchestrator
+
+    _services["orchestrator"] = ModelOrchestrator()
+
     logger.info("CMP Backend ready")
     yield
 

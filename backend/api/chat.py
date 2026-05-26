@@ -58,35 +58,50 @@ async def chat(req: ChatRequest):
         memory_plan=planner_output.memory_plan,
     )
 
-    # ── 4. Explainability ──
+    # ── 4. Orchestrate Models (Async Parallel) ──
     models_invoked = [m.name for m in planner_output.selected_models]
+    model_results = await services["orchestrator"].execute_plan(
+        planner_output=planner_output,
+        user_query=req.message,
+        retrieved_context=retrieval_result["memories"],
+        new_memory=memory,
+    )
+
+    # ── 5. Explainability ──
     explanation = services["explainability"].explain(
         planner_output=planner_output,
         retrieved_memories=retrieval_result["memories"],
         models_invoked=models_invoked,
     )
 
-    # ── 5. Build response ──
-    # Phase 1: echo back the planner's analysis + retrieved context
-    # Phase 4+: this calls the reasoning model via vLLM
-    memory_context = "\n".join(
-        f"- {m['content']}" for m in retrieval_result["memories"][:5]
-    )
-    response_text = (
-        f"[CMP Analysis]\n"
-        f"Intent: {planner_output.intent.value} "
-        f"(confidence: {planner_output.intent_confidence})\n"
-        f"Domains: {', '.join(planner_output.memory_plan.domains)}\n"
-        f"Models planned: {', '.join(models_invoked)}\n"
-    )
-    if memory.entities:
-        response_text += f"Entities extracted: {', '.join(e.name for e in memory.entities)}\n"
-    if memory.emotion and memory.emotion != "neutral":
-        response_text += f"Emotion detected: {memory.emotion}\n"
-    if memory_context:
-        response_text += f"\nRelevant memories:\n{memory_context}\n"
+    # ── 6. Build response ──
+    # Extract the final answer from the reasoning model if it was invoked
+    reasoning_output = model_results.get("reasoning_model", {})
+    if "answer" in reasoning_output:
+        response_text = reasoning_output["answer"]
+    else:
+        # Fallback to diagnostic response if no reasoning model
+        memory_context = "\n".join(
+            f"- {m['content']}" for m in retrieval_result["memories"][:5]
+        )
+        response_text = (
+            f"[CMP Analysis]\n"
+            f"Intent: {planner_output.intent.value} "
+            f"(confidence: {planner_output.intent_confidence})\n"
+            f"Domains: {', '.join(planner_output.memory_plan.domains)}\n"
+            f"Models planned: {', '.join(models_invoked)}\n"
+        )
+        if memory.entities:
+            response_text += f"Entities extracted: {', '.join(e.name for e in memory.entities)}\n"
+        if memory.emotion and memory.emotion != "neutral":
+            response_text += f"Emotion detected: {memory.emotion}\n"
+        if memory_context:
+            response_text += f"\nRelevant memories:\n{memory_context}\n"
 
     elapsed_ms = (time.perf_counter() - t0) * 1000
+
+    # Add orchestration results to explanation for debugging
+    explanation["orchestration"] = model_results
 
     return ChatResponse(
         response=response_text,

@@ -143,8 +143,38 @@ export default function ChatPage() {
                     </div>
                   </div>
 
+                  <div className="pt-2 border-t border-[var(--cmp-border)]/50 mt-2">
+                    <span className="text-[var(--cmp-text-muted)] font-semibold text-[10px] uppercase tracking-wider">Explainability: Models</span>
+                    <div className="flex flex-col gap-1 mt-1">
+                      {msg.metadata.explanation?.model_routing?.reasons?.map((m: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center text-[10px]">
+                          <span className="text-[var(--cmp-accent)]">{m.model}</span>
+                          <span className="text-[var(--cmp-text-muted)] truncate max-w-[150px] text-right" title={m.reason}>{m.reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[var(--cmp-border)]/50 mt-2">
+                    <span className="text-[var(--cmp-text-muted)] font-semibold text-[10px] uppercase tracking-wider">Explainability: Memory</span>
+                    <div className="flex flex-col gap-1 mt-1">
+                      {msg.metadata.explanation?.memory_retrieval?.memories?.map((mem: any, idx: number) => (
+                        <div key={idx} className="text-[10px]">
+                          <div className="truncate text-[var(--cmp-text)]">"{mem.content_preview}"</div>
+                          <div className="text-[var(--cmp-text-muted)] flex justify-between">
+                            <span>Score: {mem.final_score.toFixed(2)}</span>
+                            <span>{mem.reason}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {!msg.metadata.explanation?.memory_retrieval?.memories?.length && (
+                        <div className="text-[10px] text-[var(--cmp-text-muted)]">No memories retrieved</div>
+                      )}
+                    </div>
+                  </div>
+
                   {msg.metadata.planner_output.escalated_to_llm && (
-                    <div className="text-[var(--cmp-warning)] flex items-center gap-1">
+                    <div className="text-[var(--cmp-warning)] flex items-center gap-1 mt-2 pt-2 border-t border-[var(--cmp-border)]/50">
                       ⚠ Low confidence — escalated to LLM
                     </div>
                   )}
