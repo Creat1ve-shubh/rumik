@@ -1,36 +1,54 @@
 """
 Neo4j Graph Manager — CRUD for the memory graph.
 Source of truth for entities, relationships, and structure.
+
+Falls back to an in-memory store when Neo4j is unavailable.
 """
 
+import logging
 from typing import List, Dict, Any, Optional
-from neo4j import AsyncGraphDatabase, AsyncDriver
 from config import settings
-from schemas.models import Entity, Relationship, EntityType
+from schemas.models import Entity, Relationship
+
+logger = logging.getLogger("cmp.graph")
 
 
 class GraphManager:
     """Manages the Neo4j memory graph — nodes, edges, queries."""
 
     def __init__(self):
-        self._driver: Optional[AsyncDriver] = None
+        self._driver = None
+        self._connected = False
+        # In-memory fallback
+        self._mem_nodes: Dict[str, Dict[str, Any]] = {}
+        self._mem_edges: List[Dict[str, Any]] = []
+
+    @property
+    def is_connected(self) -> bool:
+        return self._connected
 
     async def connect(self) -> None:
-        self._driver = AsyncGraphDatabase.driver(
-            settings.NEO4J_URI,
-            auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
-        )
-        # Create indexes for fast lookups
-        async with self._driver.session() as session:
-            await session.run(
-                "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.id)"
+        try:
+            from neo4j import AsyncGraphDatabase
+            self._driver = AsyncGraphDatabase.driver(
+                settings.NEO4J_URI,
+                auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD),
             )
-            await session.run(
-                "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.name)"
-            )
-            await session.run(
-                "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.type)"
-            )
+            async with self._driver.session() as session:
+                await session.run(
+                    "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.id)"
+                )
+                await session.run(
+                    "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.name)"
+                )
+                await session.run(
+                    "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.type)"
+                )
+            self._connected = True
+            logger.info("Connected to Neo4j")
+        except Exception as e:
+            logger.warning(f"Neo4j not available: {e} — using in-memory graph")
+            self._connected = False
 
     async def close(self) -> None:
         if self._driver:
@@ -39,6 +57,16 @@ class GraphManager:
     # ─── Node Operations ───
 
     async def create_entity(self, entity: Entity) -> Entity:
+        if not self._connected:
+            self._mem_nodes[entity.id] = {
+                "id": entity.id,
+                "name": entity.name,
+                "type": entity.type.value,
+                "importance": entity.importance,
+                "confidence": entity.confidence,
+            }
+            return entity
+
         query = """
         MERGE (e:Entity {name: $name, type: $type})
         ON CREATE SET
@@ -69,6 +97,16 @@ class GraphManager:
         return entity
 
     async def create_relationship(self, rel: Relationship) -> Relationship:
+        if not self._connected:
+            self._mem_edges.append({
+                "id": rel.id,
+                "source": rel.source_id,
+                "target": rel.target_id,
+                "type": rel.type.value,
+                "strength": rel.strength,
+            })
+            return rel
+
         query = """
         MATCH (a:Entity {id: $source_id})
         MATCH (b:Entity {id: $target_id})
@@ -98,6 +136,14 @@ class GraphManager:
 
     async def get_user_graph(self, user_id: str = "default") -> Dict[str, Any]:
         """Return all nodes and edges for a user."""
+        if not self._connected:
+            nodes = list(self._mem_nodes.values())
+            return {
+                "nodes": nodes,
+                "edges": self._mem_edges,
+                "stats": {"total_nodes": len(nodes), "total_edges": len(self._mem_edges)},
+            }
+
         query = """
         MATCH (e:Entity)
         OPTIONAL MATCH (e)-[r:RELATES]->(t:Entity)
@@ -138,6 +184,9 @@ class GraphManager:
         self, entity_id: str, depth: int = 2, max_nodes: int = 50
     ) -> Dict[str, Any]:
         """BFS expansion from a node up to `depth` hops."""
+        if not self._connected:
+            return {"nodes": []}
+
         query = """
         MATCH path = (start:Entity {id: $entity_id})-[r:RELATES*1..$depth]-(neighbor:Entity)
         WITH neighbor, r, length(path) as dist
@@ -161,6 +210,15 @@ class GraphManager:
         self, entity_type: Optional[str] = None, name_contains: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Filter entities by type and/or name substring."""
+        if not self._connected:
+            results = list(self._mem_nodes.values())
+            if entity_type:
+                results = [n for n in results if n.get("type") == entity_type]
+            if name_contains:
+                lc = name_contains.lower()
+                results = [n for n in results if lc in n.get("name", "").lower()]
+            return results
+
         conditions = []
         params: Dict[str, Any] = {}
 
@@ -182,6 +240,12 @@ class GraphManager:
         return entities
 
     async def get_stats(self) -> Dict[str, int]:
+        if not self._connected:
+            return {
+                "total_entities": len(self._mem_nodes),
+                "total_relationships": len(self._mem_edges),
+            }
+
         async with self._driver.session() as session:
             nodes_result = await session.run("MATCH (n:Entity) RETURN count(n) as c")
             node_count = (await nodes_result.single())["c"]
