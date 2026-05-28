@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { api, GraphData } from "@/lib/api";
+import { motion } from "framer-motion";
+import { RefreshCw, X, Network } from "lucide-react";
 
-// Dynamically import react-force-graph-2d to avoid SSR issues
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export default function GraphPage() {
@@ -31,7 +32,7 @@ export default function GraphPage() {
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
-  }, [graph]); // Re-calculate when graph loads
+  }, [graph]);
 
   const loadGraph = async () => {
     setLoading(true);
@@ -52,65 +53,85 @@ export default function GraphPage() {
 
   const getNodeColor = (type: string) => {
     switch (type) {
-      case "Goal": return "#fbbf24"; // warning
-      case "Project": return "#7c5cfc"; // accent
-      case "Skill": return "#22d3ee"; // cyan
-      case "Emotion": return "#f87171"; // danger
-      case "Person": return "#34d399"; // success
-      default: return "#8888a4"; // muted
+      case "Goal": return "#fbbf24";
+      case "Project": return "#a78bfa";
+      case "Skill": return "#22d3ee";
+      case "Emotion": return "#f87171";
+      case "Person": return "#34d399";
+      default: return "#6b6b7e";
     }
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-[var(--cmp-border)] flex items-center justify-between">
+    <div className="h-full flex flex-col relative" style={{ background: "var(--bg-chat)" }}>
+      <div className="absolute inset-x-0 top-0 h-[250px] warm-glow z-0" />
+
+      {/* Header */}
+      <header className="relative z-10 px-8 py-6 border-b border-[var(--border-subtle)] flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Memory Graph</h2>
-          <p className="text-xs text-[var(--cmp-text-muted)]">
-            Interactive entity-relationship explorer (Phase 2 Force-Directed Graph)
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent-warm)]/15 flex items-center justify-center">
+              <Network className="w-4 h-4 text-[var(--accent-warm)]" />
+            </div>
+            <h2 className="text-xl font-semibold text-white tracking-tight">Memory Graph</h2>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] ml-11">
+            Interactive entity-relationship explorer
           </p>
         </div>
         <button
           onClick={loadGraph}
-          className="text-xs px-3 py-1.5 rounded-lg border border-[var(--cmp-border)] text-[var(--cmp-text-muted)] hover:text-[var(--cmp-text)] hover:border-[var(--cmp-accent)] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-[var(--text-secondary)] hover:text-white transition-colors"
+          style={{ background: "rgba(18,18,26,0.5)", border: "1px solid var(--border-subtle)" }}
         >
+          <RefreshCw className="w-3.5 h-3.5" />
           Refresh
         </button>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Graph canvas area */}
+      <div className="flex-1 flex overflow-hidden relative z-10">
+        {/* Graph Canvas */}
         <div className="flex-1 relative" ref={containerRef}>
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-[var(--cmp-text-muted)] text-sm">Loading graph...</div>
+              <div className="flex items-center gap-3 text-[var(--text-secondary)] text-sm">
+                <div className="w-5 h-5 border-2 border-[var(--accent-warm)]/30 border-t-[var(--accent-warm)] rounded-full animate-spin" />
+                Loading graph...
+              </div>
             </div>
           )}
 
           {error && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <div className="text-center max-w-sm">
-                <div className="text-4xl mb-3">🔗</div>
-                <p className="text-sm text-[var(--cmp-text-muted)]">{error}</p>
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 flex items-center justify-center">
+                  <Network className="w-7 h-7 text-[var(--danger)]" />
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">{error}</p>
               </div>
             </div>
           )}
 
           {graph && !loading && graph.nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-center max-w-sm">
-                <div className="text-5xl mb-4">🕸️</div>
-                <h3 className="text-lg font-semibold mb-2">Empty Graph</h3>
-                <p className="text-sm text-[var(--cmp-text-muted)]">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center max-w-sm"
+              >
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--accent-warm)]/10 border border-[var(--border-subtle)] flex items-center justify-center">
+                  <Network className="w-7 h-7 text-[var(--accent-warm)]" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Empty Graph</h3>
+                <p className="text-sm text-[var(--text-secondary)]">
                   Start chatting to populate the memory graph with entities and relationships.
                 </p>
-              </div>
+              </motion.div>
             </div>
           )}
 
           {graph && !loading && graph.nodes.length > 0 && dimensions.width > 0 && (
             <>
-              {/* Force Graph */}
               <ForceGraph2D
                 width={dimensions.width}
                 height={dimensions.height}
@@ -118,76 +139,92 @@ export default function GraphPage() {
                 nodeLabel="name"
                 nodeColor={(node: any) => getNodeColor(node.type)}
                 nodeRelSize={6}
-                linkColor={() => "rgba(255,255,255,0.2)"}
+                linkColor={() => "rgba(255,255,255,0.12)"}
                 linkDirectionalArrowLength={3.5}
                 linkDirectionalArrowRelPos={1}
                 linkWidth={1.5}
                 onNodeClick={handleNodeClick}
-                backgroundColor="#0a0a0f"
+                backgroundColor="#111117"
                 nodeCanvasObject={(node: any, ctx, globalScale) => {
                   const label = node.name as string;
-                  const fontSize = 12/globalScale;
-                  ctx.font = `${fontSize}px Sans-Serif`;
+                  const fontSize = 12 / globalScale;
+                  ctx.font = `500 ${fontSize}px Inter, sans-serif`;
                   const textWidth = ctx.measureText(label).width;
-                  const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+                  const padding = fontSize * 0.4;
 
-                  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
                   if (node.x && node.y) {
-                    ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
-                    
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
+                    // Node circle
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y - fontSize * 0.6, 3, 0, 2 * Math.PI);
                     ctx.fillStyle = getNodeColor(node.type);
-                    ctx.fillText(label, node.x, node.y);
-                    
-                    node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+                    ctx.fill();
+
+                    // Label
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillStyle = "rgba(255,255,255,0.8)";
+                    ctx.fillText(label, node.x, node.y + padding);
                   }
                 }}
                 nodePointerAreaPaint={(node: any, color, ctx) => {
                   ctx.fillStyle = color;
-                  const bckgDimensions = node.__bckgDimensions;
-                  if (node.x && node.y && bckgDimensions) {
-                    ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+                  if (node.x && node.y) {
+                    ctx.fillRect(node.x - 20, node.y - 10, 40, 20);
                   }
                 }}
               />
-              
-              {/* Stats overlay */}
-              <div className="absolute top-4 left-4 flex gap-4 pointer-events-none z-10">
-                <div className="glass rounded-xl px-4 py-3 text-center pointer-events-auto">
-                  <div className="text-2xl font-bold gradient-text">{graph.stats.total_nodes ?? graph.nodes.length}</div>
-                  <div className="text-[10px] text-[var(--cmp-text-muted)] mt-1">Entities</div>
-                </div>
-                <div className="glass rounded-xl px-4 py-3 text-center pointer-events-auto">
-                  <div className="text-2xl font-bold gradient-text">{graph.stats.total_edges ?? graph.edges.length}</div>
-                  <div className="text-[10px] text-[var(--cmp-text-muted)] mt-1">Relationships</div>
-                </div>
+
+              {/* Stats Overlay */}
+              <div className="absolute top-4 left-4 flex gap-3 z-10">
+                {[
+                  { label: "Entities", value: graph.stats.total_nodes ?? graph.nodes.length },
+                  { label: "Relations", value: graph.stats.total_edges ?? graph.edges.length },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="rounded-xl px-4 py-3 text-center backdrop-blur-xl"
+                    style={{ background: "rgba(18,18,26,0.7)", border: "1px solid var(--border-subtle)" }}
+                  >
+                    <div className="text-xl font-bold text-[var(--accent-warm)]">{s.value}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{s.label}</div>
+                  </div>
+                ))}
               </div>
             </>
           )}
         </div>
 
-        {/* Node inspector */}
+        {/* Node Inspector */}
         {selectedNode && (
-          <div className="w-[320px] border-l border-[var(--cmp-border)] p-4 overflow-y-auto bg-[var(--cmp-surface)]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm">Node Inspector</h3>
+          <motion.div
+            initial={{ x: 320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 320, opacity: 0 }}
+            className="w-[320px] border-l border-[var(--border-subtle)] p-6 overflow-y-auto"
+            style={{ background: "rgba(14,14,20,0.9)" }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-semibold text-sm text-white">Node Inspector</h3>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="text-[var(--cmp-text-muted)] hover:text-[var(--cmp-text)] text-lg"
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.06] text-[var(--text-muted)] transition-colors"
               >
-                ×
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-3 text-xs">
-              {Object.entries(selectedNode).filter(([key]) => !["x", "y", "vx", "vy", "index"].includes(key)).map(([key, value]) => (
-                <div key={key}>
-                  <span className="text-[var(--cmp-text-muted)]">{key}</span>
-                  <p className="font-mono mt-0.5 break-all">{String(value)}</p>
-                </div>
-              ))}
+            <div className="space-y-4">
+              {Object.entries(selectedNode)
+                .filter(([key]) => !["x", "y", "vx", "vy", "index", "__bckgDimensions"].includes(key))
+                .map(([key, value]) => (
+                  <div key={key}>
+                    <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{key}</span>
+                    <p className="text-[13px] font-mono text-[var(--text-primary)] mt-1 break-all">
+                      {String(value)}
+                    </p>
+                  </div>
+                ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
