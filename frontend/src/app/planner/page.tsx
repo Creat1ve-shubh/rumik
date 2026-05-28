@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Play } from "lucide-react";
 
 const EXAMPLES = [
@@ -36,109 +35,114 @@ export default function PlannerPage() {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden">
+    <div className="h-full w-full flex flex-col relative" style={{ background: "var(--bg-chat-container)" }}>
+      {/* ── Ambient Gradient Background ── */}
       <div className="ambient-gradient" />
 
-      <div className="flex-1 overflow-y-auto relative z-10" style={{ background: "var(--bg-chat-container)" }}>
-        <div className="max-w-4xl mx-auto px-8 py-10">
+      <div className="flex-1 overflow-y-auto relative z-10 px-6 sm:px-12 lg:px-24 py-12">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-4 mb-3">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(225,122,71,0.12)", border: "1px solid rgba(225,122,71,0.15)" }}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: "rgba(225,122,71,0.1)", border: "1px solid rgba(225,122,71,0.2)" }}
             >
-              <Zap className="w-[18px] h-[18px]" style={{ color: "var(--accent)" }} />
+              <Zap className="w-6 h-6" style={{ color: "var(--accent)" }} />
             </div>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)]">Planner Inspector</h2>
+            <div>
+              <h2 className="text-[var(--fs-h1)] font-semibold text-[var(--text-primary)] tracking-tight">
+                Planner Inspector
+              </h2>
+              <p className="text-[var(--fs-body)] text-[var(--text-secondary)] mt-1">
+                Test the 4-layer cognitive query planner in real-time
+              </p>
+            </div>
           </div>
-          <p className="text-[0.875rem] text-[var(--text-secondary)] mb-8 ml-12">
-            Test the 4-layer cognitive query planner in real-time
-          </p>
+
+          <div className="h-px w-full bg-[rgba(255,255,255,0.05)] my-8" />
 
           {/* Input */}
-          <div className="flex gap-3 mb-10">
-            <div
-              className="flex-1 rounded-xl px-4 py-3"
-              style={{ background: "var(--bg-input)", border: "1px solid rgba(255,255,255,0.06)" }}
-            >
+          <div className="flex gap-4 mb-12">
+            <div className="flex-1 glass-input rounded-[var(--radius-component)] px-5 py-4">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && test(query)}
                 placeholder="Enter a query to analyze..."
-                className="w-full bg-transparent outline-none text-[0.875rem] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                className="w-full bg-transparent outline-none text-[var(--fs-body)] text-[var(--text-primary)] input-placeholder"
               />
             </div>
             <button
               onClick={() => test(query)}
               disabled={loading || !query.trim()}
-              className="px-5 py-3 rounded-xl text-[0.875rem] font-semibold text-white flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-              style={{ background: "var(--accent)" }}
+              className="px-6 py-4 rounded-[var(--radius-component)] text-[var(--fs-body)] font-medium text-white flex items-center gap-2 transition-all"
+              style={{ background: "var(--accent)", opacity: (loading || !query.trim()) ? 0.5 : 1 }}
             >
-              <Play className="w-4 h-4" />
+              <Play className="w-5 h-5 fill-current" />
               Analyze
             </button>
           </div>
 
           {/* Examples */}
           <p className="section-label mb-4">Example Queries</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
             {EXAMPLES.map((eq) => (
-              <motion.button
+              <button
                 key={eq.query}
-                whileHover={{ scale: 1.015 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => test(eq.query)}
-                className="rounded-xl p-5 text-left transition-all"
+                className="rounded-[var(--radius-component)] p-5 text-left transition-all hover:bg-[rgba(255,255,255,0.02)]"
                 style={{ background: "var(--bg-bubble-ai)", border: "1px solid rgba(255,255,255,0.04)" }}
               >
-                <p className="text-[0.875rem] text-[var(--text-primary)] mb-3">&ldquo;{eq.query}&rdquo;</p>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: eq.color }} />
-                  <span className="text-[0.75rem] font-medium" style={{ color: eq.color }}>{eq.expected}</span>
+                <p className="text-[var(--fs-body)] text-[var(--text-primary)] mb-4 leading-snug">
+                  &ldquo;{eq.query}&rdquo;
+                </p>
+                <div className="flex items-center gap-2 mt-auto">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: eq.color }} />
+                  <span className="text-[var(--fs-sm)] font-medium" style={{ color: eq.color }}>
+                    {eq.expected}
+                  </span>
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
 
           {/* Loading */}
           {loading && (
-            <div className="flex items-center gap-3 text-[var(--text-secondary)] text-[0.875rem] mb-6">
+            <div className="flex items-center gap-3 text-[var(--text-secondary)] text-[var(--fs-body)] mb-8">
               <div className="spinner" />
               Analyzing cognitive layers...
             </div>
           )}
 
           {/* Results */}
-          <AnimatePresence>
-            {result && !("error" in result) && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="rounded-xl overflow-hidden"
-                style={{ background: "var(--bg-bubble-ai)", border: "1px solid rgba(255,255,255,0.04)" }}
+          {result && !("error" in result) && (
+            <div
+              className="rounded-[var(--radius-component)] overflow-hidden"
+              style={{ background: "var(--bg-bubble-ai)", border: "1px solid rgba(255,255,255,0.04)" }}
+            >
+              <div
+                className="px-6 py-4 flex items-center justify-between"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
               >
-                <div
-                  className="px-6 py-4 flex items-center justify-between"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-                >
-                  <span className="text-[0.875rem] font-semibold text-[var(--text-primary)]">Planner Output</span>
-                  <span className="text-[0.75rem] font-mono text-[var(--text-muted)]">{(result as any)?.total_latency_ms}ms</span>
-                </div>
-                <div className="p-6">
-                  <pre className="text-[0.75rem] font-mono text-[var(--text-secondary)] overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                    {JSON.stringify(result, null, 2)}
-                  </pre>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <span className="text-[var(--fs-body)] font-medium text-[var(--text-primary)]">
+                  Planner Output
+                </span>
+                <span className="text-[var(--fs-sm)] font-mono text-[var(--accent)]">
+                  {(result as any)?.total_latency_ms}ms
+                </span>
+              </div>
+              <div className="p-6">
+                <pre className="text-[var(--fs-sm)] font-mono text-[var(--text-secondary)] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
 
           {result && "error" in result && (
             <div
-              className="rounded-xl p-5 text-[0.875rem]"
-              style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.15)", color: "var(--danger)" }}
+              className="rounded-[var(--radius-component)] p-6 text-[var(--fs-body)]"
+              style={{ background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.1)", color: "var(--danger)" }}
             >
               {String(result.error)}
             </div>

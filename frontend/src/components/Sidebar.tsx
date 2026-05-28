@@ -2,21 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-  BrainCircuit,
   Home,
   Search,
   Info,
   FolderPlus,
   Star,
   Library,
-  Network,
-  Activity,
-  Fingerprint,
   Settings,
   HelpCircle,
-  PanelLeftClose,
+  LayoutDashboard
 } from "lucide-react";
 
 export function Sidebar() {
@@ -25,132 +20,127 @@ export function Sidebar() {
   const menuItems = [
     { name: "Home", href: "/", icon: Home },
     { name: "Search", href: "/search", icon: Search },
-    { name: "About Rumik", href: "/about", icon: Info },
+    { name: "About Visionary", href: "/about", icon: Info },
   ];
 
   const projectItems = [
     { name: "Create new project", href: "/new", icon: FolderPlus, isAction: true },
+    { name: "Planner Inspector", href: "/planner", icon: LayoutDashboard },
     { name: "Favorites", href: "/graph", icon: Star },
     { name: "Library", href: "/metrics", icon: Library },
   ];
 
   const bottomItems = [
-    { name: "Settings", href: "/identity", icon: Settings },
-    { name: "Help center", href: "/planner", icon: HelpCircle },
+    { name: "Settings", href: "/settings", icon: Settings },
+    { name: "Help center", href: "/help", icon: HelpCircle },
   ];
 
   return (
     <aside
-      className="flex flex-col shrink-0"
+      className="flex flex-col shrink-0 relative z-20"
       style={{
-        width: 260,
+        width: "25%",
+        maxWidth: "300px",
+        minWidth: "240px",
         background: "var(--bg-sidebar)",
-        borderRadius: "var(--radius-container) 0 0 var(--radius-container)",
+        borderRight: "1px solid rgba(255,255,255,0.02)",
       }}
     >
-      {/* ── Brand ── */}
-      <div className="flex items-center justify-between px-6 pt-7 pb-5">
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2.5"
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "var(--accent)", boxShadow: "0 0 14px rgba(225,122,71,0.35)" }}
-          >
-            <BrainCircuit className="w-[18px] h-[18px] text-white" />
-          </div>
-          <span className="text-[1.25rem] font-semibold text-[var(--text-primary)] leading-tight tracking-tight">
-            Visionary 2.0
-          </span>
-        </motion.div>
-        <button className="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
-          <PanelLeftClose className="w-4 h-4" />
+      {/* ── Brand / Header ── */}
+      <div className="flex items-center justify-between px-6 pt-8 pb-6">
+        <h1 className="text-[var(--fs-h1)] font-semibold text-[var(--text-primary)] tracking-tight">
+          Visionary 2.0
+        </h1>
+        <button className="w-6 h-6 rounded flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
         </button>
       </div>
 
       {/* ── Menu ── */}
-      <div className="px-4 mt-1">
-        <p className="section-label px-3 mb-2">Menu</p>
-        <nav className="space-y-0.5">
-          {menuItems.map((item, i) => (
-            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} index={i} />
+      <div className="px-4 mt-2">
+        <p className="section-label px-3">Menu</p>
+        <nav className="space-y-1">
+          {menuItems.map((item) => (
+            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} />
           ))}
         </nav>
       </div>
 
       {/* ── Projects ── */}
-      <div className="px-4 mt-7">
-        <p className="section-label px-3 mb-2">Projects</p>
-        <nav className="space-y-0.5">
-          {projectItems.map((item, i) => (
-            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} index={i + 3} />
+      <div className="px-4 mt-8">
+        <p className="section-label px-3">Projects</p>
+        <nav className="space-y-1">
+          {projectItems.map((item) => (
+            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} />
           ))}
         </nav>
       </div>
 
-      {/* ── Spacer ── */}
       <div className="flex-1" />
 
-      {/* ── Bottom ── */}
-      <div className="px-4 mb-3">
-        <nav className="space-y-0.5">
-          {bottomItems.map((item, i) => (
-            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} index={i} />
+      {/* ── Bottom Section ── */}
+      <div className="px-4 mb-4">
+        <nav className="space-y-1">
+          {bottomItems.map((item) => (
+            <SidebarLink key={item.href} item={item} isActive={pathname === item.href} />
           ))}
         </nav>
       </div>
 
       {/* ── User Profile ── */}
-      <div
-        className="flex items-center gap-3 px-6 py-5"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E17A47] to-[#a85a30] flex items-center justify-center text-white text-sm font-semibold">
-          D
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-[0.875rem] font-medium text-[var(--text-primary)] truncate">Darlene Robertson</span>
-          <span className="text-[0.75rem] text-[var(--text-muted)] truncate">darlny@gmail.com</span>
+      <div className="px-4 pb-6">
+        <div
+          className="flex items-center gap-3 p-3 rounded-[var(--radius-component)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+        >
+          <img
+            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Darlene&backgroundColor=E17A47"
+            alt="User"
+            className="w-10 h-10 rounded-full bg-[var(--accent)]"
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[var(--fs-nav)] font-medium text-[var(--text-primary)] truncate">
+              Darlene Robertson
+            </span>
+            <span className="text-[var(--fs-sm)] text-[var(--text-muted)] truncate">
+              darlny@gmail.com
+            </span>
+          </div>
         </div>
       </div>
     </aside>
   );
 }
 
-/* ── Reusable Nav Link ── */
 function SidebarLink({
   item,
   isActive,
-  index,
 }: {
   item: { name: string; href: string; icon: any; isAction?: boolean };
   isActive: boolean;
-  index: number;
 }) {
   const Icon = item.icon;
 
   return (
-    <Link href={item.href} className="block">
-      <motion.div
-        initial={{ opacity: 0, x: -6 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.03, duration: 0.25 }}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.875rem] transition-all duration-200 ${
+    <Link href={item.href} className="block group">
+      <div
+        className={`flex items-center gap-3 px-3 py-2 rounded-[var(--radius-component)] transition-all duration-200 ${
           isActive
-            ? "text-[var(--text-primary)] font-medium"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            ? "text-[var(--text-primary)] bg-[rgba(255,255,255,0.04)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.02)]"
         }`}
-        style={{ opacity: isActive ? 1 : 0.7 }}
       >
         {item.isAction ? (
-          <span className="w-[18px] h-[18px] flex items-center justify-center text-[var(--text-secondary)] text-base leading-none">+</span>
+          <span className="w-5 h-5 flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] text-lg leading-none transition-colors">
+            +
+          </span>
         ) : (
-          <Icon className="w-[18px] h-[18px] shrink-0" />
+          <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"} transition-colors`} />
         )}
-        <span>{item.name}</span>
-      </motion.div>
+        <span className="text-[var(--fs-nav)] font-medium">{item.name}</span>
+      </div>
     </Link>
   );
 }
