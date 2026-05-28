@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { BrainCircuit, Activity, Network, LayoutDashboard, Fingerprint, Chrome } from "lucide-react";
+import { BrainCircuit, Activity, Network, LayoutDashboard, Fingerprint, Zap } from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -79,7 +79,7 @@ export function Sidebar() {
         transition={{ delay: 0.4 }}
         className="p-4 mx-4 mb-6 rounded-[20px] bg-gradient-to-r from-[#98f5e1] to-[#e3f282] shadow-[0_10px_20px_rgba(152,245,225,0.3)] relative z-10 flex items-center gap-3 cursor-pointer hover:brightness-105 transition-all"
       >
-        <Chrome className="w-6 h-6 text-black shrink-0" />
+        <Zap className="w-6 h-6 text-black shrink-0" />
         <div className="flex flex-col">
           <span className="text-[13px] font-bold text-black">Get the extension</span>
           <span className="text-[11px] font-semibold text-black/60 underline decoration-black/30 underline-offset-2">Install Now</span>
