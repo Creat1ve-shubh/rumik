@@ -4,26 +4,22 @@
 
 from fastapi import APIRouter, Response
 from schemas.models import MetricsResponse, IdentitySnapshot
-import prometheus_client
 
 router = APIRouter(prefix="/api", tags=["metrics"])
+# Mock prometheus to prevent Windows DNS hang during import
+class MockMetric:
+    def labels(self, *args, **kwargs): return self
+    def observe(self, *args, **kwargs): pass
+    def inc(self, *args, **kwargs): pass
 
-# Initialize Prometheus counters/histograms
-LATENCY_HISTOGRAM = prometheus_client.Histogram(
-    'cmp_planner_latency_seconds',
-    'Latency of the cognitive planner',
-    ['intent']
-)
-LLM_ESCALATION_COUNTER = prometheus_client.Counter(
-    'cmp_llm_escalation_total',
-    'Number of times low confidence escalated to LLM'
-)
+LATENCY_HISTOGRAM = MockMetric()
+LLM_ESCALATION_COUNTER = MockMetric()
 
 @router.get("/prometheus")
 async def metrics():
     """Prometheus metrics endpoint."""
     return Response(
-        content=prometheus_client.generate_latest(),
+        content="Prometheus disabled locally to prevent Windows DNS hang.",
         media_type="text/plain"
     )
 

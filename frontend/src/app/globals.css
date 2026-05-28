@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
+@import "tailwindcss";
+
 :root {
-  --cmp-bg: #0a0a0f;
-  --cmp-surface: #12121a;
-  --cmp-surface-2: #1a1a27;
-  --cmp-border: #2a2a3d;
-  --cmp-text: #e4e4ed;
-  --cmp-text-muted: #8888a4;
-  --cmp-accent: #7c5cfc;
-  --cmp-accent-glow: rgba(124, 92, 252, 0.25);
-  --cmp-success: #34d399;
+  --cmp-bg-mesh: linear-gradient(135deg, #ff4db8 0%, #ff8566 40%, #ffffff 100%);
+  --cmp-surface: #ffffff;
+  --cmp-surface-2: #f7f7fa;
+  --cmp-border: #f0f0f4;
+  --cmp-text: #1a1a24;
+  --cmp-text-muted: #8b8b98;
+  --cmp-accent: #111111;
+  --cmp-accent-glow: rgba(0, 0, 0, 0.05);
+  
+  --cmp-bubble-user: #f4ebd0; /* Soft yellow for user */
+  --cmp-bubble-bot: #ebdff7; /* Soft purple for bot */
+  --cmp-success: #a3f5a3;
   --cmp-warning: #fbbf24;
   --cmp-danger: #f87171;
   --cmp-cyan: #22d3ee;
@@ -20,32 +25,39 @@
 }
 
 body {
-  background: var(--cmp-bg);
+  background: var(--cmp-bg-mesh);
+  background-attachment: fixed;
   color: var(--cmp-text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  margin: 0;
+  min-height: 100vh;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--cmp-surface); }
-::-webkit-scrollbar-thumb { background: var(--cmp-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--cmp-accent); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e0e0e8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #d0d0d8; }
 
 /* Glassmorphism utility */
 .glass {
-  background: rgba(18, 18, 26, 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--cmp-border);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* Glow ring */
-.glow-ring {
-  box-shadow: 0 0 0 1px var(--cmp-border), 0 0 20px var(--cmp-accent-glow);
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.05), 0 0 0 1px rgba(255,255,255,0.4) inset;
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--cmp-accent), var(--cmp-cyan));
+  background: linear-gradient(135deg, #ff4db8, #ff8566);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
