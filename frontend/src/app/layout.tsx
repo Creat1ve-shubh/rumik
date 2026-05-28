@@ -24,7 +24,7 @@ export default function RootLayout({
       <body>
         <div className="app-frame">
           <Sidebar />
-          <main className="flex-1 relative overflow-hidden" style={{ borderRadius: "0 var(--radius-app) var(--radius-app) 0" }}>
+          <main className="flex-1 relative overflow-hidden">
             {children}
           </main>
         </div>

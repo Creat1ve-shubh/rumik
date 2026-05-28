@@ -21,7 +21,6 @@
   --fs-sm: 0.75rem;
 
   /* Borders & Shadows */
-  --radius-app: 32px;
   --radius-container: 24px;
   --radius-component: 16px;
   --radius-bubble: 12px;
@@ -36,7 +35,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #000000; /* Outer background to contrast with app frame */
+  background-color: var(--bg-app); /* Remove black overflow */
   color: var(--text-primary);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -45,14 +44,11 @@ html, body {
 
 /* Master container inner layout */
 .app-frame {
-  width: calc(100vw - 32px);
-  height: calc(100vh - 32px);
-  margin: 16px;
-  border-radius: var(--radius-app);
+  width: 100vw;
+  height: 100vh;
   background-color: var(--bg-app);
   display: flex;
   overflow: hidden;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 .ambient-gradient {
@@ -62,7 +58,7 @@ html, body {
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, #D9834E 0%, #111112 100%);
-  opacity: 0.2; /* Adjusted for better visibility without overwhelming */
+  opacity: 0.2;
   pointer-events: none;
   z-index: 0;
 }
