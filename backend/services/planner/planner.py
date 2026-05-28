@@ -78,6 +78,16 @@ class CognitivePlanner:
         ]
         if escalated:
             explanation_parts.append("⚠ Low confidence — flagged for LLM escalation")
+        
+        t4 = time.perf_counter()
+        
+        # ── Metrics Tracking ──
+        planner_latency = t4 - t0
+        from api.metrics import LATENCY_HISTOGRAM, LLM_ESCALATION_COUNTER
+        LATENCY_HISTOGRAM.labels(intent=intent.value).observe(planner_latency)
+        
+        if escalated:
+            LLM_ESCALATION_COUNTER.inc()
 
         return PlannerOutput(
             intent=intent,

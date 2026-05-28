@@ -99,13 +99,39 @@ class ModelOrchestrator:
             return {"entities_found": len(query.split()) // 5, "simulated": True}
 
     async def _run_reasoning_model(self, name: str, est_latency: int, query: str, context: List[Any]) -> Dict[str, Any]:
-        """Phase 4: Will call vLLM endpoint (e.g., Qwen3-14B)."""
-        await asyncio.sleep(min(500, est_latency) / 1000.0) # Cap mock sleep to 500ms so testing is fast
+        """Phase 4: Calls vLLM endpoint if configured, else simulates."""
+        from config import settings
+        import httpx
         
-        # Build prompt from context
-        context_str = "\n".join(f"- {c['content']}" for c in context[:5])
+        context_str = "\n".join(f"- {c.get('content', '')}" for c in context[:5])
+        prompt = (
+            f"You are CMP, an intelligent AI with perfect memory.\n"
+            f"User's query: {query}\n"
+            f"Relevant memories:\n{context_str}\n"
+            f"Provide a helpful, concise answer based on these memories."
+        )
+
+        if settings.VLLM_BASE_URL:
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{settings.VLLM_BASE_URL.rstrip('/')}/v1/chat/completions",
+                        json={
+                            "model": settings.REASONING_MODEL,
+                            "messages": [{"role": "user", "content": prompt}],
+                            "max_tokens": 150,
+                        },
+                        timeout=est_latency / 1000.0 * 2 # Allow some buffer
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    answer = data["choices"][0]["message"]["content"]
+                    return {"answer": answer, "simulated": False}
+            except Exception as e:
+                logger.error(f"vLLM API failed: {e}")
+                # Fallback to simulation if API fails
         
-        # In a real implementation, this would be an httpx POST to the vLLM server
+        # Simulation Fallback
+        await asyncio.sleep(min(500, est_latency) / 1000.0) 
         answer = f"Based on your memory:\n{context_str}\n\nI understand you are focusing on this."
-        
         return {"answer": answer, "simulated": True}

@@ -2,10 +2,30 @@
 /metrics + /identity endpoints — observability and identity tracking.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from schemas.models import MetricsResponse, IdentitySnapshot
+import prometheus_client
 
 router = APIRouter(prefix="/api", tags=["metrics"])
+
+# Initialize Prometheus counters/histograms
+LATENCY_HISTOGRAM = prometheus_client.Histogram(
+    'cmp_planner_latency_seconds',
+    'Latency of the cognitive planner',
+    ['intent']
+)
+LLM_ESCALATION_COUNTER = prometheus_client.Counter(
+    'cmp_llm_escalation_total',
+    'Number of times low confidence escalated to LLM'
+)
+
+@router.get("/prometheus")
+async def metrics():
+    """Prometheus metrics endpoint."""
+    return Response(
+        content=prometheus_client.generate_latest(),
+        media_type="text/plain"
+    )
 
 
 @router.get("/metrics", response_model=MetricsResponse)

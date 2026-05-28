@@ -88,12 +88,20 @@ async def lifespan(app: FastAPI):
 
     _services["orchestrator"] = ModelOrchestrator()
 
+    # ── 9. Redis Cache ──
+    from services.cache import CacheManager
+    
+    cache = CacheManager()
+    await cache.connect()
+    _services["cache"] = cache
+
     logger.info("CMP Backend ready")
     yield
 
     # ── Shutdown ──
     await graph.close()
     await retrieval.close()
+    await cache.close()
     logger.info("CMP Backend stopped")
 
 
